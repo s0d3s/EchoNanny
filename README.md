@@ -24,6 +24,7 @@ EchoNanny provides remote access to your PC microphone stream with a clean Web U
 - **Recording history** with timeline and playback tools
 - **Automatic labels** for speech and loud-noise events. You can easily find parts of audio with voices or another noise!
 - **Web UI access** to PC audio from anywhere\*
+- **Low CPU-usage**, so can be easily run in background
 - **Auto-cut recording policy** that automatically stops recording after `{M}` minutes if no voice activity is detected during the last `{N}` minutes:
   - `AUTO_CUT_MIN_RECORDING_MINUTES={M}`
   - `AUTO_CUT_INACTIVE_WINDOW_MINUTES={N}`
