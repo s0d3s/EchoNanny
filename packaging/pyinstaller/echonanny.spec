@@ -9,7 +9,7 @@ ROOT = _spec_dir.parents[1]
 datas = [
     (str(ROOT / "backend" / "app" / "webui"), "app/webui"),
     (str(ROOT / "backend" / "assets"), "assets"),
-    (str(ROOT / "backend" / "app" / ".env.example"), "app"),
+    (str(ROOT / "backend" / ".env.example"), "app"),
 ]
 
 hiddenimports = [

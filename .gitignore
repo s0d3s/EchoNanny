@@ -23,3 +23,5 @@ packaging/inno/*.exe
 
 # PyInstaller artifacts
 packaging/pyinstaller/build/
+
+**/**/.env
