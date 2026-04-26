@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+
+# Local env and data
+backend/data/
+backend/dist/*
+!backend/dist/.gitkeep
+backend/app/webui/*
+!backend/app/webui/.gitkeep
+backend/.env.local
+frontend/.env.local
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Python packaging/build artifacts
+build/
+dist/
+*.egg-info/
+packaging/inno/*.exe
+
+# PyInstaller artifacts
+packaging/pyinstaller/build/

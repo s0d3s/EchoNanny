@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "echonanny"
+version = "0.7.0"
+description = "Remote access to your PC microphone & voice detection with Web UI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.136.0",
+  "uvicorn[standard]==0.44.0",
+  "sqlalchemy==2.0.49",
+  "pydantic==2.13.3",
+  "pydantic-settings==2.14.0",
+  "email-validator==2.3.0",
+  "python-jose[cryptography]==3.5.0",
+  "passlib[bcrypt]==1.7.4",
+  "bcrypt==4.0.1",
+  "python-multipart==0.0.26",
+  "webrtcvad==2.0.10",
+  "numpy==2.4.4",
+  "pyaudiowpatch==0.2.12.7; platform_system == 'Windows'",
+  "pyaudio==0.2.14; platform_system != 'Windows'",
+  "av==16.0.1",
+]
+
+[project.optional-dependencies]
+build = [
+  "build>=1.2.2",
+  "pyinstaller>=6.16.0",
+]
+
+[project.scripts]
+echonanny = "app.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "backend"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["webui/**/*", ".env.example"]
+
+[tool.setuptools.data-files]
+"app/assets" = [
+  "backend/assets/audio_stub.wav",
+  "backend/assets/silence_1min.wav",
+]

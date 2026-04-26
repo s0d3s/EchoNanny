@@ -1,0 +1,178 @@
+name: Release Artifacts
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build-wheel:
+    name: Build PyPI wheel (Linux)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend install
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[build]
+
+      - name: Build wheel
+        run: python scripts/build_wheels.py
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-dist
+          path: dist/*.whl
+
+  build-pyinstaller:
+    name: Build PyInstaller (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-26, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev
+
+      - name: Install macOS system dependencies
+        if: runner.os == 'macOS'
+        run: brew install portaudio
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend install
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[build]
+
+      - name: Build PyInstaller distribution
+        run: python scripts/build_pyinstaller.py
+
+      - name: Archive PyInstaller distribution (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p release-assets
+          tar -czf release-assets/echonanny-${{ runner.os }}-pyinstaller.tar.gz -C packaging/pyinstaller/dist echonanny
+
+      - name: Archive PyInstaller distribution (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          Compress-Archive -Path packaging/pyinstaller/dist/echonanny/* -DestinationPath release-assets/echonanny-Windows-pyinstaller.zip -Force
+
+      - name: Install Inno Setup (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build Inno Setup installer (Windows)
+        if: runner.os == 'Windows'
+        run: python scripts/build_inno_installer.py
+
+      - name: Collect Inno Setup installer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Path packaging/inno -Filter "EchoNanny-Setup*.exe" -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $installer) { throw "Inno Setup installer not found in packaging/inno" }
+          Copy-Item $installer.FullName -Destination release-assets/
+
+      - name: Upload PyInstaller artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyinstaller-${{ matrix.os }}
+          path: release-assets/*
+
+  publish-pypi:
+    name: Publish wheel to PyPI
+    runs-on: ubuntu-latest
+    needs: [build-wheel]
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel-dist
+          path: dist
+
+      - name: Install twine
+        run: python -m pip install --upgrade twine
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: python -m twine upload --non-interactive dist/*.whl
+
+  upload-release-assets:
+    name: Upload artifacts to GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-wheel, build-pyinstaller]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Upload assets to current release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            release-assets/**/*.whl
+            release-assets/**/*.zip
+            release-assets/**/*.tar.gz
+            release-assets/**/*.exe
+          fail_on_unmatched_files: true

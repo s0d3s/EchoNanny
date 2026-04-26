@@ -1,0 +1,42 @@
+name: CI Build (Linux)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux-build-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend install
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[build]
+
+      - name: Build bundled wheel (includes frontend build)
+        run: python scripts/build_wheels.py
+
+      - name: Build PyInstaller executable (Linux)
+        run: python scripts/build_pyinstaller.py
