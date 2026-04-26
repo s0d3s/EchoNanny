@@ -15,7 +15,8 @@
 
 EchoNanny provides remote access to your PC microphone stream with a clean Web UI, recording history, and automatic audio labeling.
 
-> [!NOTE] On Windows also possible to record audio from speakers(system audio)
+> [!NOTE]
+> On Windows also possible to record audio from speakers(system audio)
 
 ## Features
 
@@ -88,7 +89,8 @@ The installer script will:
 
     Download `EchoNanny-Setup*.exe` from [Releases](https://github.com/s0d3s/EchoNanny/releases), run installer, then launch EchoNanny from Start Menu.
 
-> [!NOTE] Read info about configuring and accessing Web UI below👇
+> [!NOTE]
+> Read info about configuring and accessing Web UI below👇
 
 ## 🌐 Web UI
 
